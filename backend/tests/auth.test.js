@@ -19,6 +19,8 @@ afterAll(async () => {
   await mongoose.connection.close();
 });
 
+
+// --- Test for POST /api/auth/register ---
 describe('POST /api/auth/register', () => {
   it('should register a new user successfully', async () => {
     const res = await request(app)
@@ -52,5 +54,58 @@ describe('POST /api/auth/register', () => {
 
     expect(res.statusCode).toEqual(400);
     expect(res.body.message).toBe('Username already exists');
+  });
+});
+
+
+// --- Test for POST /api/auth/login ---
+describe('POST /api/auth/login', () => {
+  // We need a user to exist before we can test logging in
+  beforeEach(async () => {
+    await request(app)
+      .post('/api/auth/register')
+      .send({
+        username: 'logintester',
+        password: 'password123',
+        role: 'customer'
+      });
+  });
+
+  it('should log in a user with correct credentials', async () => {
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({
+        username: 'logintester',
+        password: 'password123'
+      });
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body).toHaveProperty('token');
+    expect(res.body).toHaveProperty('user');
+    expect(res.body.user.username).toBe('logintester');
+  });
+
+  it('should fail with incorrect password', async () => {
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({
+        username: 'logintester',
+        password: 'wrongpassword'
+      });
+
+    expect(res.statusCode).toEqual(401);
+    expect(res.body.message).toBe('Invalid credentials');
+  });
+
+  it('should fail with non-existent username', async () => {
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({
+        username: 'nouser',
+        password: 'password123'
+      });
+
+    expect(res.statusCode).toEqual(401);
+    expect(res.body.message).toBe('Invalid credentials');
   });
 });
