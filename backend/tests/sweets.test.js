@@ -242,3 +242,72 @@ describe('GET /api/sweets/search', () => {
     expect(res.body).toEqual([]);
   });
 });
+
+
+// --- Test for PUT /api/sweets/:id ---
+describe('PUT /api/sweets/:id', () => {
+  let testSweet;
+  const updatedData = {
+    name: 'New Sweet Name',
+    category: 'New Category',
+    price: 99.99,
+    quantity: 1,
+  };
+
+  // Before each test, create a fresh sweet to work with
+  beforeEach(async () => {
+    testSweet = await Sweet.create({
+      name: 'Old Name',
+      category: 'Old Category',
+      price: 10,
+      quantity: 10,
+    });
+  });
+
+  it('should fail with 401 (Unauthorized) if no token is provided', async () => {
+    const res = await request(app)
+      .put(`/api/sweets/${testSweet._id}`)
+      .send(updatedData);
+    expect(res.statusCode).toEqual(401);
+  });
+
+  it('should fail with 403 (Forbidden) if a non-admin user (customer) tries to update', async () => {
+    const res = await request(app)
+      .put(`/api/sweets/${testSweet._id}`)
+      .set('Authorization', `Bearer ${customerToken}`)
+      .send(updatedData);
+    expect(res.statusCode).toEqual(403);
+  });
+
+  it('should fail with 404 (Not Found) if the sweet does not exist', async () => {
+    const nonExistentId = new mongoose.Types.ObjectId(); // Create a valid, but non-existent, ID
+    const res = await request(app)
+      .put(`/api/sweets/${nonExistentId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send(updatedData);
+    expect(res.statusCode).toEqual(404);
+  });
+
+  it('should fail with 400 (Bad Request) if admin provides invalid data (e.g., empty name)', async () => {
+    const res = await request(app)
+      .put(`/api/sweets/${testSweet._id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: '' }); // Mongoose model 'required: true' will catch this
+    expect(res.statusCode).toEqual(400);
+  });
+
+  it('should successfully update the sweet if admin is authenticated', async () => {
+    const res = await request(app)
+      .put(`/api/sweets/${testSweet._id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send(updatedData);
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.name).toBe('New Sweet Name');
+    expect(res.body.price).toBe(99.99);
+
+    // Verify the change in the database
+    const sweetInDb = await Sweet.findById(testSweet._id);
+    expect(sweetInDb.name).toBe('New Sweet Name');
+  });
+});
