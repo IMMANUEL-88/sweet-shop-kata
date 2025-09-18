@@ -64,3 +64,27 @@ export const searchSweets = asyncHandler(async (req, res) => {
   const sweets = await Sweet.find(query);
   res.json(sweets);
 });
+
+// @desc    Update a sweet
+// @route   PUT /api/sweets/:id
+// @access  Private/Admin
+export const updateSweet = asyncHandler(async (req, res) => {
+  const { name, category, price, quantity } = req.body;
+  const sweet = await Sweet.findById(req.params.id);
+
+  if (sweet) {
+    // Update fields only if they are provided in the request
+    sweet.name = name ?? sweet.name;
+    sweet.category = category ?? sweet.category;
+    // Use `??` to allow setting price/quantity to 0, which `||` would treat as false
+    sweet.price = price ?? sweet.price; 
+    sweet.quantity = quantity ?? sweet.quantity;
+
+    const updatedSweet = await sweet.save();
+    res.json(updatedSweet);
+  } else {
+    // If sweet is not found
+    res.status(404);
+    throw new Error('Sweet not found');
+  }
+});
