@@ -1,8 +1,11 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+
+// --- Route Imports ---
 import authRoutes from "./routes/authRoutes.js";
 import sweetsRoutes from "./routes/sweetsRoutes.js"
+import { errorHandler } from "./middleware/errorMiddleware.js"
 
 dotenv.config();
 
@@ -17,5 +20,8 @@ app.get("/", (req, res) => {
 // --- API Routes ---
 app.use("/api/auth", authRoutes);
 app.use("/api/sweets", sweetsRoutes);
+
+// --- Error Middleware ---
+app.use(errorHandler);
 
 export default app;

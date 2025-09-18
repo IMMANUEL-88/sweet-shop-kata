@@ -1,31 +1,25 @@
 import { Sweet } from '../models/Sweet.js';
+import asyncHandler from '../utils/asyncHandler.js';
 
 // @desc    Add a new sweet
 // @route   POST /api/sweets
 // @access  Private/Admin
-export const addSweet = async (req, res) => {
-  try {
-    const { name, category, price, quantity } = req.body;
+export const addSweet = asyncHandler(async (req, res) => { // <-- WRAP HERE
+  const { name, category, price, quantity } = req.body;
 
-    // Basic validation
-    if (!name || !category || price == null || quantity == null) {
-      return res.status(400).json({ message: 'Please provide all required fields' });
-    }
-
-    const sweet = new Sweet({
-      name,
-      category,
-      price,
-      quantity,
-    });
-
-    const createdSweet = await sweet.save();
-    res.status(201).json(createdSweet);
-  } catch (error) {
-    // This will catch Mongoose validation errors (like missing 'required' fields)
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({ message: error.message });
-    }
-    res.status(500).json({ message: error.message });
+  // Validation is now handled by Mongoose and our errorHandler
+  if (!name || !category || price == null || quantity == null) {
+     res.status(400); // Set status
+     throw new Error('Please provide all required fields'); // Throw error
   }
-};
+
+  const sweet = new Sweet({
+    name,
+    category,
+    price,
+    quantity,
+  });
+
+  const createdSweet = await sweet.save();
+  res.status(201).json(createdSweet);
+});
