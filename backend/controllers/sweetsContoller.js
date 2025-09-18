@@ -109,19 +109,24 @@ export const deleteSweet = asyncHandler(async (req, res) => {
 // @route   POST /api/sweets/:id/purchase
 // @access  Private
 export const purchaseSweet = asyncHandler(async (req, res) => {
-  const sweet = await Sweet.findById(req.params.id);
+  // It finds a sweet matching the ID AND where quantity is greater than 0,
+  // then atomically decrements the quantity by 1.
+  const sweet = await Sweet.findOneAndUpdate(
+    { _id: req.params.id, quantity: { $gt: 0 } },
+    { $inc: { quantity: -1 } },
+    { new: true }
+  );
 
-  if (!sweet) {
-    res.status(404);
-    throw new Error('Sweet not found');
-  }
-
-  if (sweet.quantity > 0) {
-    sweet.quantity = sweet.quantity - 1;
-    const updatedSweet = await sweet.save();
-    res.json(updatedSweet);
+  if (sweet) {
+    res.json(sweet);
   } else {
-    res.status(400);
-    throw new Error('Sweet is out of stock');
+    const sweetExists = await Sweet.findById(req.params.id);
+    if (!sweetExists) {
+      res.status(404);
+      throw new Error('Sweet not found');
+    } else {
+      res.status(400);
+      throw new Error('Sweet is out of stock');
+    }
   }
 });
