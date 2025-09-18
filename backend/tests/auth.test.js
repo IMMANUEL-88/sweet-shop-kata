@@ -3,10 +3,9 @@ import app from '../index.js';
 import mongoose from 'mongoose';
 import { User } from '../models/User.js'; // This file doesn't exist yet!
 
-// Connect to a test database before all tests
+// Connect to the database before all tests
 beforeAll(async () => {
-  const url = process.env.MONGO_URI; // Use a test DB
-  await mongoose.connect(url, { useNewUrlParser: true });
+  await mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true });
 });
 
 // Clear the User collection before each test
