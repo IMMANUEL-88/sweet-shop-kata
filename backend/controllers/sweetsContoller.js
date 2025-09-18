@@ -130,3 +130,28 @@ export const purchaseSweet = asyncHandler(async (req, res) => {
     }
   }
 });
+
+// @desc    Restock a sweet
+// @route   POST /api/sweets/:id/restock
+// @access  Private/Admin
+export const restockSweet = asyncHandler(async (req, res) => {
+  const { amount } = req.body;
+
+  // Convert amount to a number and validate it
+  const restockAmount = Number(amount);
+  if (!restockAmount || restockAmount <= 0) {
+    res.status(400);
+    throw new Error('Invalid restock amount');
+  }
+
+  const sweet = await Sweet.findById(req.params.id);
+
+  if (!sweet) {
+    res.status(404);
+    throw new Error('Sweet not found');
+  }
+
+  sweet.quantity = sweet.quantity + restockAmount;
+  const updatedSweet = await sweet.save();
+  res.json(updatedSweet);
+});
