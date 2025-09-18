@@ -5,7 +5,7 @@ import { User } from '../models/User.js'; // This file doesn't exist yet!
 
 // Connect to a test database before all tests
 beforeAll(async () => {
-  const url = `mongodb://127.0.0.1/sweet-shop-test`; // Use a test DB
+  const url = process.env.MONGO_URI; // Use a test DB
   await mongoose.connect(url, { useNewUrlParser: true });
 });
 
