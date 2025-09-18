@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import { addSweet, getSweets } from '../controllers/sweetsContoller.js';
+import { addSweet, getSweets, searchSweets } from '../controllers/sweetsContoller.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 
 // @route /api/sweets
@@ -9,6 +9,7 @@ import { protect, admin } from '../middleware/authMiddleware.js';
 // 1. `protect` checks for a valid token.
 // 2. `admin` checks if that user has the 'admin' role.
 // 3. `addSweet` controller only runs if both pass.
+router.route('/search').get(protect, searchSweets);
 router.route('/').post(protect, admin, addSweet).get(protect, getSweets);
 
 export default router;

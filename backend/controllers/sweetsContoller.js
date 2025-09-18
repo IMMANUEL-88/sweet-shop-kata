@@ -31,3 +31,36 @@ export const getSweets = asyncHandler(async (req, res) => {
   const sweets = await Sweet.find({});
   res.json(sweets);
 });
+
+// @desc    Search for sweets
+// @route   GET /api/sweets/search
+// @access  Private
+export const searchSweets = asyncHandler(async (req, res) => {
+  const { name, category, minPrice, maxPrice } = req.query;
+
+  // Build the query object dynamically
+  const query = {};
+
+  if (name) {
+    // $regex provides partial matching, $options: 'i' makes it case-insensitive
+    query.name = { $regex: name, $options: 'i' };
+  }
+
+  if (category) {
+    query.category = category;
+  }
+
+  // Handle price range
+  if (minPrice || maxPrice) {
+    query.price = {};
+    if (minPrice) {
+      query.price.$gte = Number(minPrice); // $gte = greater than or equal to
+    }
+    if (maxPrice) {
+      query.price.$lte = Number(maxPrice); // $lte = less than or equal to
+    }
+  }
+
+  const sweets = await Sweet.find(query);
+  res.json(sweets);
+});
