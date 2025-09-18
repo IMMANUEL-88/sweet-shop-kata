@@ -430,3 +430,74 @@ describe('POST /api/sweets/:id/purchase', () => {
     expect(res.body.quantity).toBe(9);
   });
 });
+
+
+// --- Test for POST /api/sweets/:id/restock ---
+describe('POST /api/sweets/:id/restock', () => {
+  let testSweet;
+  const restockAmount = { amount: 50 };
+
+  beforeEach(async () => {
+    // Create a sweet with a known quantity
+    testSweet = await Sweet.create({
+      name: 'Restock Target',
+      category: 'Candy',
+      price: 3,
+      quantity: 10,
+    });
+  });
+
+  it('should fail with 401 (Unauthorized) if no token is provided', async () => {
+    const res = await request(app)
+      .post(`/api/sweets/${testSweet._id}/restock`)
+      .send(restockAmount);
+    expect(res.statusCode).toEqual(401);
+  });
+
+  it('should fail with 403 (Forbidden) if a non-admin user (customer) tries to restock', async () => {
+    const res = await request(app)
+      .post(`/api/sweets/${testSweet._id}/restock`)
+      .set('Authorization', `Bearer ${customerToken}`)
+      .send(restockAmount);
+    expect(res.statusCode).toEqual(403);
+  });
+
+  it('should fail with 404 (Not Found) if the sweet does not exist', async () => {
+    const nonExistentId = new mongoose.Types.ObjectId();
+    const res = await request(app)
+      .post(`/api/sweets/${nonExistentId}/restock`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send(restockAmount);
+    expect(res.statusCode).toEqual(404);
+  });
+
+  it('should fail with 400 (Bad Request) if the amount is missing or invalid', async () => {
+    // Test 1: Missing amount
+    const res1 = await request(app)
+      .post(`/api/sweets/${testSweet._id}/restock`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({});
+    expect(res1.statusCode).toEqual(400);
+
+    // Test 2: Invalid amount
+    const res2 = await request(app)
+      .post(`/api/sweets/${testSweet._id}/restock`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ amount: -10 });
+    expect(res2.statusCode).toEqual(400);
+  });
+
+  it('should successfully restock the sweet and increase quantity (as admin)', async () => {
+    const res = await request(app)
+      .post(`/api/sweets/${testSweet._id}/restock`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send(restockAmount);
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.quantity).toBe(60); // 10 (initial) + 50 (restock) = 60
+
+    // Verify in DB
+    const sweetInDb = await Sweet.findById(testSweet._id);
+    expect(sweetInDb.quantity).toBe(60);
+  });
+});
