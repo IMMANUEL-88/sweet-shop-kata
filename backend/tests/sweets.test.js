@@ -311,3 +311,52 @@ describe('PUT /api/sweets/:id', () => {
     expect(sweetInDb.name).toBe('New Sweet Name');
   });
 });
+
+
+// --- Test for DELETE /api/sweets/:id ---
+describe('DELETE /api/sweets/:id', () => {
+  let testSweet;
+
+  // Before each test, create a fresh sweet to delete
+  beforeEach(async () => {
+    testSweet = await Sweet.create({
+      name: 'To Be Deleted',
+      category: 'Temporary',
+      price: 1,
+      quantity: 1,
+    });
+  });
+
+  it('should fail with 401 (Unauthorized) if no token is provided', async () => {
+    const res = await request(app).delete(`/api/sweets/${testSweet._id}`);
+    expect(res.statusCode).toEqual(401);
+  });
+
+  it('should fail with 403 (Forbidden) if a non-admin user (customer) tries to delete', async () => {
+    const res = await request(app)
+      .delete(`/api/sweets/${testSweet._id}`)
+      .set('Authorization', `Bearer ${customerToken}`);
+    expect(res.statusCode).toEqual(403);
+  });
+
+  it('should fail with 404 (Not Found) if the sweet does not exist', async () => {
+    const nonExistentId = new mongoose.Types.ObjectId(); // Create a valid, but non-existent, ID
+    const res = await request(app)
+      .delete(`/api/sweets/${nonExistentId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(res.statusCode).toEqual(404);
+  });
+
+  it('should successfully delete the sweet if admin is authenticated', async () => {
+    const res = await request(app)
+      .delete(`/api/sweets/${testSweet._id}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.message).toBe('Sweet removed');
+
+    // Verify it's gone from the database
+    const sweetInDb = await Sweet.findById(testSweet._id);
+    expect(sweetInDb).toBeNull();
+  });
+});
