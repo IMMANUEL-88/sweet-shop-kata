@@ -48,7 +48,7 @@ afterAll(async () => {
 });
 
 
-/// --- Test for POST /api/sweets ---
+// --- Test for POST /api/sweets ---
 describe('POST /api/sweets', () => {
   const newSweetData = {
     name: 'Chocolate Eclair',
@@ -106,7 +106,7 @@ describe('POST /api/sweets', () => {
 });
 
 
-/// --- Test for GET /api/sweets ---
+// --- Test for GET /api/sweets ---
 describe('GET /api/sweets', () => {
   it('should fail with 401 (Unauthorized) if no token is provided', async () => {
     const res = await request(app).get('/api/sweets');
@@ -152,5 +152,93 @@ describe('GET /api/sweets', () => {
     expect(res.statusCode).toEqual(200);
     expect(res.body.length).toBe(1);
     expect(res.body[0].name).toBe('Admin Choco');
+  });
+});
+
+
+// --- Test for GET /api/sweets/search ---
+describe('GET /api/sweets/search', () => {  
+  // Seed the database with a known set of sweets before each search test
+  beforeEach(async () => {
+    await Sweet.insertMany([
+      { name: 'Caramel Log', category: 'Caramel', price: 5, quantity: 10 },
+      { name: 'Cherry Drop', category: 'Hard Candy', price: 2, quantity: 20 },
+      { name: 'Dark Chocolate', category: 'Chocolate', price: 8, quantity: 5 },
+      { name: 'Milk Chocolate', category: 'Chocolate', price: 7, quantity: 15 }
+    ]);
+  });
+
+  it('should fail with 401 (Unauthorized) if no token is provided', async () => {
+    const res = await request(app).get('/api/sweets/search?name=choco');
+    expect(res.statusCode).toEqual(401);
+  });
+
+  it('should return all sweets if no search query is provided', async () => {
+    const res = await request(app)
+      .get('/api/sweets/search')
+      .set('Authorization', `Bearer ${customerToken}`);
+    
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.length).toBe(4);
+  });
+
+  it('should search by name (case-insensitive)', async () => {
+    const res = await request(app)
+      .get('/api/sweets/search?name=chocolate')
+      .set('Authorization', `Bearer ${customerToken}`);
+      
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.length).toBe(2);
+    expect(res.body[0].name).toBe('Dark Chocolate');
+    expect(res.body[1].name).toBe('Milk Chocolate');
+  });
+  
+  it('should search by category', async () => {
+    const res = await request(app)
+      .get('/api/sweets/search?category=Chocolate')
+      .set('Authorization', `Bearer ${customerToken}`);
+      
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.length).toBe(2);
+  });
+  
+  it('should search by price range (min and max)', async () => {
+    const res = await request(app)
+      .get('/api/sweets/search?minPrice=4&maxPrice=7')
+      .set('Authorization', `Bearer ${customerToken}`);
+      
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.length).toBe(2);
+    expect(res.body[0].name).toBe('Caramel Log');
+    expect(res.body[1].name).toBe('Milk Chocolate');
+  });
+
+  it('should search by price range (min only)', async () => {
+    const res = await request(app)
+      .get('/api/sweets/search?minPrice=6')
+      .set('Authorization', `Bearer ${customerToken}`);
+      
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.length).toBe(2);
+    expect(res.body[0].name).toBe('Dark Chocolate');
+  });
+
+  it('should combine search queries (category and name)', async () => {
+    const res = await request(app)
+      .get('/api/sweets/search?category=Chocolate&name=dark')
+      .set('Authorization', `Bearer ${customerToken}`);
+      
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.length).toBe(1);
+    expect(res.body[0].name).toBe('Dark Chocolate');
+  });
+
+  it('should return an empty array for no results', async () => {
+    const res = await request(app)
+      .get('/api/sweets/search?name=nonexistent')
+      .set('Authorization', `Bearer ${customerToken}`);
+      
+    expect(res.statusCode).toEqual(200);
+    expect(res.body).toEqual([]);
   });
 });
