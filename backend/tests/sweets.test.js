@@ -360,3 +360,73 @@ describe('DELETE /api/sweets/:id', () => {
     expect(sweetInDb).toBeNull();
   });
 });
+
+
+// --- Test for POST /api/sweets/:id/purchase ---
+describe('POST /api/sweets/:id/purchase', () => {
+  let sweetInStock;
+  let sweetOutOfStock;
+
+  beforeEach(async () => {
+    // Create one sweet that is in stock
+    sweetInStock = await Sweet.create({
+      name: 'Available Sweet',
+      category: 'Candy',
+      price: 5,
+      quantity: 10,
+    });
+    // Create one sweet that is out of stock
+    sweetOutOfStock = await Sweet.create({
+      name: 'Sold Out Sweet',
+      category: 'Chocolate',
+      price: 10,
+      quantity: 0,
+    });
+  });
+
+  it('should fail with 401 (Unauthorized) if no token is provided', async () => {
+    const res = await request(app).post(
+      `/api/sweets/${sweetInStock._id}/purchase`
+    );
+    expect(res.statusCode).toEqual(401);
+  });
+
+  it('should fail with 404 (Not Found) if the sweet does not exist', async () => {
+    const nonExistentId = new mongoose.Types.ObjectId();
+    const res = await request(app)
+      .post(`/api/sweets/${nonExistentId}/purchase`)
+      .set('Authorization', `Bearer ${customerToken}`);
+    expect(res.statusCode).toEqual(404);
+  });
+
+  it('should fail with 400 (Bad Request) if the sweet is out of stock', async () => {
+    const res = await request(app)
+      .post(`/api/sweets/${sweetOutOfStock._id}/purchase`)
+      .set('Authorization', `Bearer ${customerToken}`);
+      
+    expect(res.statusCode).toEqual(400);
+    expect(res.body.message).toBe('Sweet is out of stock');
+  });
+
+  it('should successfully purchase a sweet and decrease quantity by 1 (as customer)', async () => {
+    const res = await request(app)
+      .post(`/api/sweets/${sweetInStock._id}/purchase`)
+      .set('Authorization', `Bearer ${customerToken}`);
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.quantity).toBe(9); // 10 - 1 = 9
+
+    // Verify in DB
+    const sweetInDb = await Sweet.findById(sweetInStock._id);
+    expect(sweetInDb.quantity).toBe(9);
+  });
+
+  it('should successfully purchase a sweet and decrease quantity by 1 (as admin)', async () => {
+    const res = await request(app)
+      .post(`/api/sweets/${sweetInStock._id}/purchase`)
+      .set('Authorization', `Bearer ${adminToken}`); // Admins can buy sweets too
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.quantity).toBe(9);
+  });
+});
