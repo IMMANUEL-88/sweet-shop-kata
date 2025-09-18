@@ -137,21 +137,23 @@ export const purchaseSweet = asyncHandler(async (req, res) => {
 export const restockSweet = asyncHandler(async (req, res) => {
   const { amount } = req.body;
 
-  // Convert amount to a number and validate it
   const restockAmount = Number(amount);
   if (!restockAmount || restockAmount <= 0) {
     res.status(400);
-    throw new Error('Invalid restock amount');
+    throw new Error('Invalid restock amount: Must be a positive number');
   }
 
-  const sweet = await Sweet.findById(req.params.id);
+  // Use findByIdAndUpdate with $inc for an atomic update
+  const sweet = await Sweet.findByIdAndUpdate(
+    req.params.id,
+    { $inc: { quantity: restockAmount } },
+    { new: true, runValidators: true }
+  );
 
   if (!sweet) {
     res.status(404);
     throw new Error('Sweet not found');
   }
 
-  sweet.quantity = sweet.quantity + restockAmount;
-  const updatedSweet = await sweet.save();
-  res.json(updatedSweet);
+  res.json(sweet);
 });
