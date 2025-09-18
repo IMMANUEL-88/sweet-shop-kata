@@ -104,3 +104,24 @@ export const deleteSweet = asyncHandler(async (req, res) => {
     throw new Error('Sweet not found');
   }
 });
+
+// @desc    Purchase a sweet
+// @route   POST /api/sweets/:id/purchase
+// @access  Private
+export const purchaseSweet = asyncHandler(async (req, res) => {
+  const sweet = await Sweet.findById(req.params.id);
+
+  if (!sweet) {
+    res.status(404);
+    throw new Error('Sweet not found');
+  }
+
+  if (sweet.quantity > 0) {
+    sweet.quantity = sweet.quantity - 1;
+    const updatedSweet = await sweet.save();
+    res.json(updatedSweet);
+  } else {
+    res.status(400);
+    throw new Error('Sweet is out of stock');
+  }
+});

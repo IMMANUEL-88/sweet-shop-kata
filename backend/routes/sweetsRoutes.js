@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import { addSweet, deleteSweet, getSweets, searchSweets, updateSweet } from '../controllers/sweetsContoller.js';
+import { addSweet, deleteSweet, getSweets, purchaseSweet, searchSweets, updateSweet } from '../controllers/sweetsContoller.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 
 // @route /api/sweets
@@ -12,5 +12,6 @@ import { protect, admin } from '../middleware/authMiddleware.js';
 router.route('/search').get(protect, searchSweets);
 router.route('/').post(protect, admin, addSweet).get(protect, getSweets);
 router.route('/:id').put(protect, admin, updateSweet).delete(protect, admin, deleteSweet);
+router.route('/:id/purchase').post(protect, purchaseSweet);
 
 export default router;
