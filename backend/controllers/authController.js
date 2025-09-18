@@ -1,12 +1,5 @@
 import { User } from '../models/User.js';
-import jwt from 'jsonwebtoken';
-
-// Helper to generate token
-const generateToken = (id, role) => {
-  return jwt.sign({ id, role }, process.env.JWT_SECRET, {
-    expiresIn: '30d',
-  });
-};
+import generateToken from '../utils/generateToken.js';
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
@@ -29,7 +22,7 @@ export const registerUser = async (req, res) => {
           username: user.username,
           role: user.role,
         },
-        token: generateToken(user._id, user.role),
+        token: generateToken(user._id, user.role), // This still works
       });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
@@ -38,6 +31,7 @@ export const registerUser = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // @desc    Auth user & get token (Login)
 // @route   POST /api/auth/login
@@ -48,7 +42,6 @@ export const loginUser = async (req, res) => {
   try {
     const user = await User.findOne({ username });
 
-    // Check for user AND if password matches
     if (user && (await user.matchPassword(password))) {
       res.json({
         user: {
@@ -56,10 +49,9 @@ export const loginUser = async (req, res) => {
           username: user.username,
           role: user.role,
         },
-        token: generateToken(user._id, user.role),
+        token: generateToken(user._id, user.role), // This also works
       });
     } else {
-      // Security: Use a generic message for both "user not found" and "wrong password"
       res.status(401).json({ message: 'Invalid credentials' });
     }
   } catch (error) {
