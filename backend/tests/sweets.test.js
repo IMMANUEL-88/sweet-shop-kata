@@ -47,6 +47,8 @@ afterAll(async () => {
   await mongoose.connection.close();
 });
 
+
+/// --- Test for POST /api/sweets ---
 describe('POST /api/sweets', () => {
   const newSweetData = {
     name: 'Chocolate Eclair',
@@ -100,5 +102,55 @@ describe('POST /api/sweets', () => {
     const sweet = await Sweet.findById(res.body._id);
     expect(sweet).not.toBeNull();
     expect(sweet.name).toBe('Chocolate Eclair');
+  });
+});
+
+
+/// --- Test for GET /api/sweets ---
+describe('GET /api/sweets', () => {
+  it('should fail with 401 (Unauthorized) if no token is provided', async () => {
+    const res = await request(app).get('/api/sweets');
+    expect(res.statusCode).toEqual(401);
+  });
+
+  it('should return an empty array if no sweets exist', async () => {
+    // The beforeEach hook cleans the Sweets collection, so it's empty
+    const res = await request(app)
+      .get('/api/sweets')
+      .set('Authorization', `Bearer ${customerToken}`);
+      
+    expect(res.statusCode).toEqual(200);
+    expect(res.body).toEqual([]);
+  });
+
+  it('should return a list of all sweets for an authenticated customer', async () => {
+    // Manually create some sweets for this test
+    await Sweet.insertMany([
+      { name: 'Gummy Bears', category: 'Candy', price: 1.99, quantity: 100 },
+      { name: 'Lollipop', category: 'Candy', price: 0.99, quantity: 200 }
+    ]);
+
+    const res = await request(app)
+      .get('/api/sweets')
+      .set('Authorization', `Bearer ${customerToken}`);
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.length).toBe(2);
+    expect(res.body[0].name).toBe('Gummy Bears');
+  });
+
+  it('should return a list of all sweets for an authenticated admin', async () => {
+    // Manually create sweets for this test
+    await Sweet.insertMany([
+      { name: 'Admin Choco', category: 'Chocolate', price: 5.99, quantity: 50 }
+    ]);
+
+    const res = await request(app)
+      .get('/api/sweets')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.length).toBe(1);
+    expect(res.body[0].name).toBe('Admin Choco');
   });
 });
