@@ -1,12 +1,10 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
+import sweetsRoutes from "./routes/sweetsRoutes.js"
 
 dotenv.config();
-
-connectDB();
 
 const app = express();
 app.use(cors()); // Enable CORS
@@ -18,9 +16,6 @@ app.get("/", (req, res) => {
 
 // --- API Routes ---
 app.use("/api/auth", authRoutes);
-app.use("/api/auth", authRoutes);
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.use("/api/sweets", sweetsRoutes);
 
 export default app;

@@ -6,11 +6,16 @@ import { Sweet } from '../models/Sweet.js'; // This model doesn't exist yet!
 
 let adminToken;
 let customerToken;
-let adminId;
 
 beforeAll(async () => {
   // Connect to the database
   await mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true });
+});
+
+// Clear collections before each test
+beforeEach(async () => {
+  await Sweet.deleteMany();
+  await User.deleteMany();
 
   // Create and log in an admin user
   await request(app).post('/api/auth/register').send({
@@ -23,7 +28,6 @@ beforeAll(async () => {
     password: 'password123'
   });
   adminToken = adminRes.body.token;
-  adminId = adminRes.body.user._id;
 
   // Create and log in a customer user
   await request(app).post('/api/auth/register').send({
@@ -38,14 +42,8 @@ beforeAll(async () => {
   customerToken = customerRes.body.token;
 });
 
-// Clear collections before each test
-beforeEach(async () => {
-  await Sweet.deleteMany();
-});
-
 // Disconnect after all tests
 afterAll(async () => {
-  await User.deleteMany(); // Clean up users
   await mongoose.connection.close();
 });
 
