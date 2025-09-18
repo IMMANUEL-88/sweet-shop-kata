@@ -1,9 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-// The fix is to use curly braces for a named import
 import { jwtDecode } from 'jwt-decode'; 
-// Using a more specific path to help the bundler resolve the module.
 import { setAuthToken, registerUser, loginUser } from '/src/api/api.js';
-import { useNavigate } from 'react-router-dom';
+import { replace, useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext();
 
@@ -67,7 +65,7 @@ export const AuthProvider = ({ children }) => {
       setUser(data.user);
       setAuthToken(data.token);
       showNotification('Registration successful!', 'success');
-      navigate('/');
+      navigate('/', {replace: true});
     } catch (err) {
       showNotification(err.response?.data?.message || 'Registration failed.');
       throw err;
@@ -83,7 +81,7 @@ export const AuthProvider = ({ children }) => {
     // We don't navigate on initial load-logout
     if (window.location.pathname !== '/login') {
       showNotification('Logged out successfully.', 'success');
-      navigate('/login');
+      navigate('/login', { replace: true});
     }
   };
 

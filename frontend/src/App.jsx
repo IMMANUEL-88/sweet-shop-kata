@@ -1,17 +1,18 @@
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import React from "react";
+import { Routes, Route } from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 
 // Layout & Components
-import Navbar from './components/Layout/Navbar';
-import Notification from './components/Layout/Notification';
-import ProtectedRoute from './components/ProtectedRoute';
+import Navbar from "./components/Layout/Navbar";
+import Notification from "./components/Layout/Notification";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Pages
-import HomePage from './pages/HomePage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import AdminDashboard from './components/Admin/AdminDashboard';
+import HomePage from "./pages/HomePage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import AdminDashboard from "./components/Admin/AdminDashboard";
+import DiscountHeader from "./components/DiscountHeader";
 
 // Main App Component with routing
 function AppContent() {
@@ -19,7 +20,12 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Notification message={notification.message} type={notification.type} onClose={closeNotification} />
+      <Notification
+        message={notification.message}
+        type={notification.type}
+        onClose={closeNotification}
+      />
+      
       <Navbar />
       <main>
         <Routes>
