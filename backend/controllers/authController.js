@@ -39,4 +39,30 @@ export const registerUser = async (req, res) => {
   }
 };
 
-// --- We will add loginUser here next ---
+// @desc    Auth user & get token (Login)
+// @route   POST /api/auth/login
+// @access  Public
+export const loginUser = async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    const user = await User.findOne({ username });
+
+    // Check for user AND if password matches
+    if (user && (await user.matchPassword(password))) {
+      res.json({
+        user: {
+          _id: user._id,
+          username: user.username,
+          role: user.role,
+        },
+        token: generateToken(user._id, user.role),
+      });
+    } else {
+      // Security: Use a generic message for both "user not found" and "wrong password"
+      res.status(401).json({ message: 'Invalid credentials' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
