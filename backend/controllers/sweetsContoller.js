@@ -88,3 +88,19 @@ export const updateSweet = asyncHandler(async (req, res) => {
     throw new Error('Sweet not found');
   }
 });
+
+// @desc    Delete a sweet
+// @route   DELETE /api/sweets/:id
+// @access  Private/Admin
+export const deleteSweet = asyncHandler(async (req, res) => {
+  const sweet = await Sweet.findById(req.params.id);
+
+  if (sweet) {
+    await sweet.deleteOne(); // Use deleteOne() on the document
+    res.json({ message: 'Sweet removed' });
+  } else {
+    // If sweet is not found
+    res.status(404);
+    throw new Error('Sweet not found');
+  }
+});
