@@ -4,13 +4,13 @@ import asyncHandler from '../utils/asyncHandler.js';
 // @desc    Add a new sweet
 // @route   POST /api/sweets
 // @access  Private/Admin
-export const addSweet = asyncHandler(async (req, res) => { // <-- WRAP HERE
+export const addSweet = asyncHandler(async (req, res) => {
   const { name, category, price, quantity } = req.body;
 
-  // Validation is now handled by Mongoose and our errorHandler
+  // Validation is handled by Mongoose and our errorHandler
   if (!name || !category || price == null || quantity == null) {
-     res.status(400); // Set status
-     throw new Error('Please provide all required fields'); // Throw error
+     res.status(400);
+     throw new Error('Please provide all required fields');
   }
 
   const sweet = new Sweet({
@@ -22,4 +22,12 @@ export const addSweet = asyncHandler(async (req, res) => { // <-- WRAP HERE
 
   const createdSweet = await sweet.save();
   res.status(201).json(createdSweet);
+});
+
+// @desc    Get all sweets
+// @route   GET /api/sweets
+// @access  Private
+export const getSweets = asyncHandler(async (req, res) => {
+  const sweets = await Sweet.find({});
+  res.json(sweets);
 });
