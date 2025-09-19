@@ -6,6 +6,7 @@ import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import sweetsRoutes from "./routes/sweetsRoutes.js"
 import { errorHandler } from "./middleware/errorMiddleware.js"
+import cartRoutes from "./routes/cartRoutes.js"
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.get("/", (req, res) => {
 // --- API Routes ---
 app.use("/api/auth", authRoutes);
 app.use("/api/sweets", sweetsRoutes);
+app.use("/api/cart", cartRoutes);
 
 // --- Error Middleware ---
 app.use(errorHandler);

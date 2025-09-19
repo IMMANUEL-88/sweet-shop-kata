@@ -1,0 +1,44 @@
+import asyncHandler from '../utils/asyncHandler.js';
+import { Sweet } from '../models/Sweet.js';
+import { User } from '../models/User.js';
+
+/**
+ * @desc    Add an item to the logged-in user's cart or update its quantity.
+ * @route   POST /api/cart
+ * @access  Private
+ */
+export const addToCart = asyncHandler(async (req, res) => {
+  const { sweetId, quantity } = req.body;
+  const numQuantity = Number(quantity);
+
+  // 1. Validation (for 400 Bad Request)
+  if (!sweetId || !numQuantity || numQuantity <= 0) {
+    res.status(400);
+    throw new Error('A valid sweet ID and positive quantity are required.');
+  }
+
+  // 2. Check if the sweet exists (for 404 Not Found)
+  const sweet = await Sweet.findById(sweetId);
+  if (!sweet) {
+    res.status(404);
+    throw new Error('Sweet not found');
+  }
+
+  // 3. Get the user (from 'protect' middleware)
+  const user = await User.findById(req.user._id);
+  const existingItemIndex = user.cart.findIndex(
+    (item) => item.sweet.toString() === sweetId
+  );
+
+  if (existingItemIndex > -1) {
+    // 4. If item exists, update its quantity
+    user.cart[existingItemIndex].quantity += numQuantity;
+  } else {
+    // 5. If item is new, add it to the cart
+    user.cart.push({ sweet: sweetId, quantity: numQuantity });
+  }
+
+  // 6. Save and respond
+  await user.save();
+  res.status(200).json(user.cart);
+});
