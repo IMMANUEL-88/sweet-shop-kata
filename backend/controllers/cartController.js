@@ -42,3 +42,25 @@ export const addToCart = asyncHandler(async (req, res) => {
   await user.save();
   res.status(200).json(user.cart);
 });
+
+/**
+ * @desc    Get all items in the logged-in user's cart.
+ * @route   GET /api/cart
+ * @access  Private
+ */
+export const getCart = asyncHandler(async (req, res) => {
+  // 1. Get the user and their cart. We use .populate() to get the full
+  //    details of each sweet (like name and price) instead of just the ID.
+  const user = await User.findById(req.user._id).populate({
+    path: 'cart.sweet',
+    model: 'Sweet'
+  });
+
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+  
+  // 2. Respond with the user's populated cart.
+  res.status(200).json(user.cart);
+});
