@@ -573,3 +573,46 @@ describe('POST /api/cart - Add Item to Cart', () => {
     expect(res.body[0].quantity).toBe(5); // Quantity should be 2 + 3 = 5
   });
 });
+
+describe('GET /api/cart - View Cart', () => {
+  let sweet1;
+
+  beforeEach(async () => {
+    // Before each test, create a sweet that can be added to the cart
+    sweet1 = await Sweet.create({ name: 'Lollipop', category: 'Candy', price: 1, quantity: 100 });
+  });
+
+  it('should fail with 401 Unauthorized if no token is provided', async () => {
+    const res = await request(app).get('/api/cart');
+    expect(res.statusCode).toEqual(401);
+  });
+
+  it('should return an empty array for a user with an empty cart', async () => {
+    const res = await request(app)
+      .get('/api/cart')
+      .set('Authorization', `Bearer ${customerToken}`);
+      
+    expect(res.statusCode).toEqual(200);
+    expect(res.body).toEqual([]);
+  });
+
+  it('should return all items in the user’s cart with full sweet details', async () => {
+    // First, add an item to the user's cart
+    await request(app)
+      .post('/api/cart')
+      .set('Authorization', `Bearer ${customerToken}`)
+      .send({ sweetId: sweet1._id, quantity: 5 });
+
+    // Now, try to view the cart
+    const res = await request(app)
+      .get('/api/cart')
+      .set('Authorization', `Bearer ${customerToken}`);
+      
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.length).toBe(1);
+    expect(res.body[0].quantity).toBe(5);
+    // Check for populated sweet details
+    expect(res.body[0].sweet).toHaveProperty('name', 'Lollipop');
+    expect(res.body[0].sweet).toHaveProperty('price', 1);
+  });
+});
