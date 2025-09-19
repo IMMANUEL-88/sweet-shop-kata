@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
 // Layout & Components
@@ -16,7 +16,11 @@ import DiscountHeader from "./components/DiscountHeader";
 
 // Main App Component with routing
 function AppContent() {
-  const { notification, closeNotification } = useAuth();
+  const { notification, closeNotification, user } = useAuth();
+  const location = useLocation();
+
+  // Don’t show navbar/discount on login/register pages
+  const hideLayout = ["/login", "/register"].includes(location.pathname);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -25,8 +29,14 @@ function AppContent() {
         type={notification.type}
         onClose={closeNotification}
       />
-      
-      <Navbar />
+
+      {!hideLayout && user && (
+        <>
+          <DiscountHeader />
+          <Navbar />
+        </>
+      )}
+
       <main>
         <Routes>
           {/* Public Routes */}

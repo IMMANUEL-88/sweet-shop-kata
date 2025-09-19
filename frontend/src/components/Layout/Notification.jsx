@@ -4,7 +4,7 @@ const Notification = ({ message, type, onClose }) => {
   if (!message) return null;
 
   const baseClasses =
-    'fixed top-5 left-1/2 transform -translate-x-1/2 text-white py-2 px-4 rounded-lg shadow-lg animate-fade-in-down z-50';
+    'fixed top-1/9 left-1/2 transform -translate-x-1/2 text-white py-2 px-4 rounded-lg shadow-lg animate-fade-in-down z-50';
   const typeClasses = type === 'success' ? 'bg-green-500' : 'bg-red-500';
 
   useEffect(() => {

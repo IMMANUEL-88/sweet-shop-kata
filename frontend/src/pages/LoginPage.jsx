@@ -81,11 +81,11 @@ const LoginPage = () => {
         <h1 className="text-4xl font-bold mb-4 relative z-10">Hello There!</h1>
         <p className="text-xl mb-6 relative z-10">🍭 Sweet to see you again!</p>
         <p className="max-w-md text-center text-md leading-relaxed relative z-10">
-          Because every moment deserves a little candy magic – shop, savor, and
+          Every moment deserves a little candy magic – shop, savor, and
           smile.
         </p>
         <footer className="absolute bottom-6 text-xs opacity-80 z-10">
-          © 2025 Immanuel Jeyam. All rights reserved.
+          © 2025 Sweetify. All rights reserved.
         </footer>
       </div>
 
