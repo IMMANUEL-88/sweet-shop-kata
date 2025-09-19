@@ -5,21 +5,14 @@ import asyncHandler from '../utils/asyncHandler.js';
 // @route   POST /api/sweets
 // @access  Private/Admin
 export const addSweet = asyncHandler(async (req, res) => {
-  const { name, category, price, quantity } = req.body;
+  const { name, category, price, quantity, imageUrl } = req.body; // <-- Add imageUrl
 
-  // Validation is handled by Mongoose and our errorHandler
   if (!name || !category || price == null || quantity == null) {
      res.status(400);
      throw new Error('Please provide all required fields');
   }
 
-  const sweet = new Sweet({
-    name,
-    category,
-    price,
-    quantity,
-  });
-
+  const sweet = new Sweet({ name, category, price, quantity, imageUrl }); // <-- Add imageUrl
   const createdSweet = await sweet.save();
   res.status(201).json(createdSweet);
 });
@@ -69,21 +62,18 @@ export const searchSweets = asyncHandler(async (req, res) => {
 // @route   PUT /api/sweets/:id
 // @access  Private/Admin
 export const updateSweet = asyncHandler(async (req, res) => {
-  const { name, category, price, quantity } = req.body;
+  const { name, category, price, quantity, imageUrl } = req.body; // <-- Add imageUrl
   const sweet = await Sweet.findById(req.params.id);
 
   if (sweet) {
-    // Update fields only if they are provided in the request
     sweet.name = name ?? sweet.name;
     sweet.category = category ?? sweet.category;
-    // Use `??` to allow setting price/quantity to 0, which `||` would treat as false
-    sweet.price = price ?? sweet.price; 
+    sweet.price = price ?? sweet.price;
     sweet.quantity = quantity ?? sweet.quantity;
-
+    sweet.imageUrl = imageUrl ?? sweet.imageUrl; // <-- Add imageUrl
     const updatedSweet = await sweet.save();
     res.json(updatedSweet);
   } else {
-    // If sweet is not found
     res.status(404);
     throw new Error('Sweet not found');
   }
@@ -157,3 +147,38 @@ export const restockSweet = asyncHandler(async (req, res) => {
 
   res.json(sweet);
 });
+
+// @desc    Purchase all items from cart
+// @route   POST /api/purchase
+// @access  Private
+// export const purchaseFromCart = asyncHandler(async (req, res) => {
+//   // 1. Get user and populate cart with full sweet details
+//   const user = await User.findById(req.user._id).populate('cart.sweet');
+
+//   if (!user.cart || user.cart.length === 0) {
+//     res.status(400);
+//     throw new Error('Your cart is empty');
+//   }
+
+//   // 2. Validate stock for all items BEFORE making any changes
+//   for (const item of user.cart) {
+//     if (item.quantity > item.sweet.quantity) {
+//       res.status(400);
+//       throw new Error(`Not enough stock for ${item.sweet.name}. Available: ${item.sweet.quantity}, In Cart: ${item.quantity}`);
+//     }
+//   }
+
+//   // 3. If validation passes, update all sweet quantities
+//   const updatePromises = user.cart.map(item => 
+//     Sweet.findByIdAndUpdate(item.sweet._id, {
+//       $inc: { quantity: -item.quantity }
+//     })
+//   );
+//   await Promise.all(updatePromises);
+  
+//   // 4. Clear the user's cart
+//   user.cart = [];
+//   await user.save();
+
+//   res.status(200).json({ message: 'Purchase successful!' });
+// });

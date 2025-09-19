@@ -2,10 +2,11 @@ import request from 'supertest';
 import app from '../index.js';
 import mongoose from 'mongoose';
 import { User } from '../models/User.js';
-import { Sweet } from '../models/Sweet.js'; // This model doesn't exist yet!
+import { Sweet } from '../models/Sweet.js'; 
 
 let adminToken;
 let customerToken;
+let customerId;
 
 beforeAll(async () => {
   // Connect to the database
@@ -40,6 +41,7 @@ beforeEach(async () => {
     password: 'password123'
   });
   customerToken = customerRes.body.token;
+  customerId = customerRes.body.user._id;
 });
 
 // Disconnect after all tests
@@ -54,7 +56,8 @@ describe('POST /api/sweets', () => {
     name: 'Chocolate Eclair',
     category: 'Pastry',
     price: 3.99,
-    quantity: 50
+    quantity: 50,
+    imageUrl: 'https://www.seriouseats.com/thmb/f3kx43qc--aS4-okr8VNpnSAZZQ=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/__opt__aboutcom__coeus__resources__content_migration__serious_eats__seriouseats.com__2020__12__20201210-choux-eclairs-vicky-wasik-16-acf615b81c2f4217857bbf80d60c28c1.jpg',
   };
 
   it('should fail with 401 (Unauthorized) if no token is provided', async () => {
@@ -252,6 +255,7 @@ describe('PUT /api/sweets/:id', () => {
     category: 'New Category',
     price: 99.99,
     quantity: 1,
+    imageUrl: 'https://example.com/new.jpg', // <-- ADD THIS
   };
 
   // Before each test, create a fresh sweet to work with
@@ -499,5 +503,73 @@ describe('POST /api/sweets/:id/restock', () => {
     // Verify in DB
     const sweetInDb = await Sweet.findById(testSweet._id);
     expect(sweetInDb.quantity).toBe(60);
+  });
+});
+
+describe('POST /api/cart - Add Item to Cart', () => {
+  let sweet1;
+
+  beforeEach(async () => {
+    // Create a sweet to add to the cart
+    // This runs AFTER the top-level beforeEach, so the DB is clean
+    sweet1 = await Sweet.create({ name: 'Lollipop', category: 'Candy', price: 1, quantity: 100 });
+  });
+  
+  it('should fail with 401 Unauthorized if no token is provided', async () => {
+    const res = await request(app)
+      .post('/api/cart')
+      .send({ sweetId: sweet1._id, quantity: 1 });
+    expect(res.statusCode).toEqual(401);
+  });
+
+  it('should fail with 404 Not Found if the sweet does not exist', async () => {
+    const nonExistentId = new mongoose.Types.ObjectId();
+    const res = await request(app)
+      .post('/api/cart')
+      .set('Authorization', `Bearer ${customerToken}`)
+      .send({ sweetId: nonExistentId, quantity: 1 });
+    expect(res.statusCode).toEqual(404);
+  });
+  
+  it('should fail with 400 Bad Request if quantity is zero or negative', async () => {
+    const res = await request(app)
+      .post('/api/cart')
+      .set('Authorization', `Bearer ${customerToken}`)
+      .send({ sweetId: sweet1._id, quantity: 0 }); // Invalid quantity
+    expect(res.statusCode).toEqual(400);
+  });
+
+  it('should successfully add a new item to the user cart', async () => {
+    const res = await request(app)
+      .post('/api/cart')
+      .set('Authorization', `Bearer ${customerToken}`)
+      .send({ sweetId: sweet1._id, quantity: 2 });
+    
+    expect(res.statusCode).toEqual(200);
+    expect(res.body[0].sweet).toBe(sweet1._id.toString());
+    expect(res.body[0].quantity).toBe(2);
+
+    // Verify in the database
+    const user = await User.findById(customerId);
+    expect(user.cart.length).toBe(1);
+    expect(user.cart[0].quantity).toBe(2);
+  });
+
+  it('should update the quantity if the same item is added to the cart again', async () => {
+    // 1. Add 2 lollipops
+    await request(app)
+      .post('/api/cart')
+      .set('Authorization', `Bearer ${customerToken}`)
+      .send({ sweetId: sweet1._id, quantity: 2 });
+    
+    // 2. Add 3 more lollipops
+    const res = await request(app)
+      .post('/api/cart')
+      .set('Authorization', `Bearer ${customerToken}`)
+      .send({ sweetId: sweet1._id, quantity: 3 });
+      
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.length).toBe(1); // Cart should still only have one item
+    expect(res.body[0].quantity).toBe(5); // Quantity should be 2 + 3 = 5
   });
 });
