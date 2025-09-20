@@ -1,24 +1,28 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { getSweets, searchSweets, purchaseSweet } from '/src/api/api.js';
-import { useAuth } from '/src/context/AuthContext.jsx';
-import SweetCard from '/src/components/SweetCard.jsx';
-import useDebounce from '/src/hooks/useDebounce.js';
+import React, { useState, useEffect, useCallback } from "react";
+// FIX: Import 'addToCart' instead of 'purchaseSweet'
+import { getSweets, searchSweets } from "/src/api/api.js";
+import { useAuth } from "/src/context/AuthContext.jsx";
+import useDebounce from "/src/hooks/useDebounce.js";
 
 // Import the new homepage sections
-import Banner from '/src/components/HomePage/Banner.jsx';
-import Categories from '/src/components/HomePage/Categories.jsx';
-import BestSellers from '/src/components/HomePage/BestSellers.jsx';
-import CorporateOrders from '/src/components/HomePage/CorporateOrders.jsx';
-import Footer from '../components/Layout/Footer'
+import Banner from "/src/components/HomePage/Banner.jsx";
+import Categories from "/src/components/HomePage/Categories.jsx";
+import BestSellers from "/src/components/HomePage/BestSellers.jsx";
+import CorporateOrders from "/src/components/HomePage/CorporateOrders.jsx";
+// FIX: Corrected the import path to be absolute from /src
+import CategoryShowcase from "/src/components/HomePage/CategoryShowcase.jsx";
+// FIX: Corrected the import path and added extension
+import Footer from "/src/components/Layout/Footer.jsx";
 
 const HomePage = () => {
   const [sweets, setSweets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { showNotification } = useAuth();
+
+  const { showNotification, addToCart } = useAuth();
 
   // Search state
-  const [name, setName] = useState('');
-  const [category, setCategory] = useState('');
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState("");
 
   // Debounce search terms
   const debouncedName = useDebounce(name, 300);
@@ -30,7 +34,7 @@ const HomePage = () => {
       const { data } = await getSweets();
       setSweets(data);
     } catch (error) {
-      showNotification('Could not fetch sweets.', 'error');
+      showNotification("Could not fetch sweets.", "error");
     } finally {
       setIsLoading(false);
     }
@@ -47,7 +51,7 @@ const HomePage = () => {
         const { data } = await searchSweets(params);
         setSweets(data);
       } catch (error) {
-        showNotification('Search failed.', 'error');
+        showNotification("Search failed.", "error");
       } finally {
         setIsLoading(false);
       }
@@ -60,31 +64,39 @@ const HomePage = () => {
     runSearch();
   }, [runSearch]);
 
-  const handlePurchase = async (sweetId) => {
-    try {
-      const { data: updatedSweet } = await purchaseSweet(sweetId);
-      // Update the state for both the main sweets list and potentially best sellers if they are the same
-      setSweets(currentSweets =>
-        currentSweets.map(s => (s._id === sweetId ? updatedSweet : s))
-      );
-      showNotification(`Purchased ${updatedSweet.name}!`, 'success');
-    } catch (error) {
-      showNotification(error.response?.data?.message || 'Purchase failed.', 'error');
-    }
+  // This function was defined but calling 'addToCart' which was not imported.
+  // The import fix at the top of the file resolves this.
+  const handleAddToCart = (sweetId, quantity) => {
+    addToCart(sweetId, quantity);
   };
 
   return (
     <div>
       {/* Render all the homepage components in order */}
-      
+
       <Banner />
-      <Categories />
-      <BestSellers />
+      <Categories onAddToCart={handleAddToCart} />
+      <BestSellers onAddToCart={handleAddToCart} />
+      <CategoryShowcase
+        title="Just Sweets"
+        category="Sweet"
+        onAddToCart={handleAddToCart}
+      />
+      <CategoryShowcase
+        title="Just Snacks"
+        category="Snacks"
+        bgColor="bg-pink-200"
+        onAddToCart={handleAddToCart}
+      />
+      <CategoryShowcase
+        title="Exclusive Laddus"
+        category="Laddu"
+        onAddToCart={handleAddToCart}
+      />
       <CorporateOrders />
-      <Footer/>
+      <Footer />
     </div>
   );
 };
 
 export default HomePage;
-

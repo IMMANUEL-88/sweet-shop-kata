@@ -32,4 +32,22 @@ export const deleteSweet = (id) => api.delete(`/sweets/${id}`);
 export const purchaseSweet = (id) => api.post(`/sweets/${id}/purchase`);
 export const restockSweet = (id, amount) => api.post(`/sweets/${id}/restock`, { amount });
 
-export default api;
+// --- Cart Service ---
+export const addToCart = (cartData) => {
+  // cartData should be { sweetId, quantity }
+  return api.post('/cart', cartData);
+};
+
+export const getCart = () => {
+  return api.get('/cart');
+};
+
+export const deleteCartItem = (sweetId) => {
+  return api.delete(`/cart/${sweetId}`);
+};
+
+export const purchaseFromCart = () => {
+  return api.post('/cart/purchase');
+};
+
+export default api; 

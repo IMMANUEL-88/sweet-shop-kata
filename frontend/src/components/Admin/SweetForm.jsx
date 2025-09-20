@@ -63,6 +63,10 @@ const SweetForm = ({ sweet, onFormSubmit, onCancel }) => {
         <label className="block text-sm font-medium text-gray-700">Quantity</label>
         <input type="number" name="quantity" min="0" value={formData.quantity} onChange={handleChange} className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm" required />
       </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Image URL</label>
+        <input type="text" name="imageUrl" value={formData.imageUrl} onChange={handleChange} className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm" placeholder="https://example.com/image.jpg" />
+      </div>
       <div className="flex justify-end gap-4 pt-4">
         <button type="button" onClick={onCancel} className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Cancel</button>
         <button type="submit" className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600">Save</button>

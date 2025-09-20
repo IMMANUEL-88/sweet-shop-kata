@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 // Layout & Components
 import Navbar from "./components/Layout/Navbar";
 import Notification from "./components/Layout/Notification";
+import CartSlider from "./components/Layout/CartSlider";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 // Pages
@@ -16,7 +17,7 @@ import DiscountHeader from "./components/DiscountHeader";
 
 // Main App Component with routing
 function AppContent() {
-  const { notification, closeNotification, user } = useAuth();
+  const { notification, closeNotification, user, isCartOpen } = useAuth();
   const location = useLocation();
 
   // Don’t show navbar/discount on login/register pages
@@ -30,11 +31,13 @@ function AppContent() {
         onClose={closeNotification}
       />
 
+      {isCartOpen && <CartSlider />}
+
       {!hideLayout && user && (
-        <>
+        <div className="sticky top-0 z-40 shadow-md">
           <DiscountHeader />
           <Navbar />
-        </>
+        </div>
       )}
 
       <main>
