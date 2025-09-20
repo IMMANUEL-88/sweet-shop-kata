@@ -80,25 +80,45 @@ The frontend will be live at `http://localhost:5173` (or the next available port
 
 ## Screenshots
 
-*(Replace these with your own screenshots!)*
+**Login Page**
 
-| Login Page | Homepage |
-| :---: | :---: |
-|  | 
+![Login Screenshot](frontend/src/demo/login.png)
 
-[Image of Homepage]
- |
 
-| Cart Slider | Admin Dashboard |
-| :---: | :---: |
-|  |  |
+**Register Page**
 
-| Success Modal |
-| :---: |
-| 
+![Register Screenshot](frontend/src/demo/register.png)
 
-[Image of Success Animation]
- |
+
+**Home Page**
+
+![HomePage Screenshot](frontend/src/demo/home1.png)
+![HomePage Screenshot](frontend/src/demo/home2.png)
+![HomePage Screenshot](frontend/src/demo/home3.png)
+![HomePage Screenshot](frontend/src/demo/home4.png)
+
+
+**Dashboard Page**
+
+![Dashboard Screenshot](frontend/src/demo/dashboard.png)
+![NewSweet Screenshot](frontend/src/demo/newSweet.png)
+
+
+**Search PopUp**
+
+![Search Screenshot](frontend/src/demo/search.png)
+
+
+**Category Popup**
+
+![Category Screenshot](frontend/src/demo/categoryPopup.png)
+
+
+**Cart Page**
+
+![Cart Screenshot](frontend/src/demo/cart.png)
+![Purchase Screenshot](frontend/src/demo/confirmPurchase.png)
+![Success Screenshot](frontend/src/demo/purchaseSuccess.png)
 
 ---
 
@@ -203,7 +223,7 @@ This project was built in collaboration with an AI assistant (Google's Gemini) a
 * **Tools Used:** Google Gemini
 
 * **How I Used It:**
-    * **Backend TDD:** I used the AI to generate the "Red" (failing test) for each new endpoint based on the requirements. I would then write the "Green" (passing) code myself, and afterward, I would ask the AI to "Refactor" my code or suggest improvements (like using `asyncHandler` or atomic operations).
+    * **Backend TDD:** I used the AI to generate the "Red" (failing test) for each new endpoint based on the requirements. I would then collaborate with AI to write the "Green" (passing) code myself, and afterward, I would ask the AI to "Refactor" my code or suggest improvements (like using `asyncHandler` or atomic operations).
     * **Frontend Development:** I asked the AI to generate entire React components (like `Navbar`, `SweetCard`, and `CartSlider`) based on my feature descriptions and preferred tech (Tailwind CSS).
     * **Debugging (Most Critical):** I frequently pasted error messages (from both Jest and the browser console) directly to the AI. It helped me diagnose the root cause of complex bugs, including:
         * JavaScript typos (`e.targe` vs. `e.target.value`).
@@ -213,3 +233,4 @@ This project was built in collaboration with an AI assistant (Google's Gemini) a
     * **Git Commits:** I asked the AI to generate descriptive, conventional commit messages for each TDD step.
 
 * **My Reflection:** Using an AI as a pair programmer was incredibly effective. It allowed me to focus on the *architecture* and *logic* while it handled the boilerplate for tests and UI components. The debugging process was the most valuable; instead of being stuck for hours on a cryptic error, I could get an immediate diagnosis and solution, which taught me *why* the bug was happening. It made the entire TDD process faster and more educational.
+
