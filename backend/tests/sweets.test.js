@@ -616,3 +616,51 @@ describe('GET /api/cart - View Cart', () => {
     expect(res.body[0].sweet).toHaveProperty('price', 1);
   });
 });
+
+describe('DELETE /api/cart/:id - Remove Item from Cart', () => {
+  let sweet1, sweet2;
+
+  beforeEach(async () => {
+    // Seed sweets
+    sweet1 = await Sweet.create({ name: 'Lollipop', price: 1, quantity: 100 });
+    sweet2 = await Sweet.create({ name: 'Gummy Bears', price: 2, quantity: 50 });
+
+    // Seed the user's cart with two items
+    const user = await User.findById(customerId);
+    user.cart = [
+      { sweet: sweet1._id, quantity: 5 },
+      { sweet: sweet2._id, quantity: 3 }
+    ];
+    await user.save();
+  });
+
+  it('should fail with 401 Unauthorized if no token is provided', async () => {
+    const res = await request(app).delete(`/api/cart/${sweet1._id}`);
+    expect(res.statusCode).toEqual(401);
+  });
+
+  it('should fail with 404 Not Found if the item is not in the cart', async () => {
+    const nonExistentSweetId = new mongoose.Types.ObjectId();
+    const res = await request(app)
+      .delete(`/api/cart/${nonExistentSweetId}`)
+      .set('Authorization', `Bearer ${customerToken}`);
+      
+    expect(res.statusCode).toEqual(404);
+    expect(res.body.message).toBe('Item not found in cart');
+  });
+
+  it('should successfully remove a single item from the cart', async () => {
+    const res = await request(app)
+      .delete(`/api/cart/${sweet1._id}`) // Deleting the Lollipop
+      .set('Authorization', `Bearer ${customerToken}`);
+
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.length).toBe(1); // Cart should only have 1 item left
+    expect(res.body[0].sweet.name).toBe('Gummy Bears'); // The Gummy Bears should remain
+
+    // Verify in the database
+    const user = await User.findById(customerId);
+    expect(user.cart.length).toBe(1);
+    expect(user.cart[0].sweet.toString()).toBe(sweet2._id.toString());
+  });
+});
