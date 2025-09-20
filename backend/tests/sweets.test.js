@@ -536,40 +536,41 @@ describe("POST /api/cart - Add Item to Cart", () => {
     expect(res.statusCode).toEqual(400);
   });
 
-  it("should successfully add a new item to the user cart", async () => {
-    const res = await request(app)
-      .post("/api/cart")
-      .set("Authorization", `Bearer ${customerToken}`)
-      .send({ sweetId: sweet1._id, quantity: 2 });
+  it('should successfully add a new item to the user cart', async () => {
+      const res = await request(app)
+        .post('/api/cart')
+        .set('Authorization', `Bearer ${customerToken}`)
+        .send({ sweetId: sweet1._id, quantity: 2 });
+      
+      expect(res.statusCode).toEqual(200);
 
-    expect(res.statusCode).toEqual(200);
-    expect(res.body[0].sweet).toBe(sweet1._id.toString());
-    expect(res.body[0].quantity).toBe(2);
+      // --- THIS IS THE FIX ---
+      // We now expect a populated object, so we check the _id *inside* it.
+      expect(res.body[0].sweet._id).toBe(sweet1._id.toString());
+      // --- END FIX ---
+      
+      expect(res.body[0].quantity).toBe(2);
 
-    // Verify in the database
-    const user = await User.findById(customerId);
-    expect(user.cart.length).toBe(1);
-    expect(user.cart[0].quantity).toBe(2);
+      const user = await User.findById(customerId);
+      expect(user.cart.length).toBe(1);
+    });
+
+    it('should update the quantity if the same item is added to the cart again', async () => {
+      await request(app)
+        .post('/api/cart')
+        .set('Authorization', `Bearer ${customerToken}`)
+        .send({ sweetId: sweet1._id, quantity: 2 });
+      
+      const res = await request(app)
+        .post('/api/cart')
+        .set('Authorization', `Bearer ${customerToken}`)
+        .send({ sweetId: sweet1._id, quantity: 3 });
+        
+      expect(res.statusCode).toEqual(200);
+      expect(res.body.length).toBe(1);
+      expect(res.body[0].quantity).toBe(5);
+    });
   });
-
-  it("should update the quantity if the same item is added to the cart again", async () => {
-    // 1. Add 2 lollipops
-    await request(app)
-      .post("/api/cart")
-      .set("Authorization", `Bearer ${customerToken}`)
-      .send({ sweetId: sweet1._id, quantity: 2 });
-
-    // 2. Add 3 more lollipops
-    const res = await request(app)
-      .post("/api/cart")
-      .set("Authorization", `Bearer ${customerToken}`)
-      .send({ sweetId: sweet1._id, quantity: 3 });
-
-    expect(res.statusCode).toEqual(200);
-    expect(res.body.length).toBe(1); // Cart should still only have one item
-    expect(res.body[0].quantity).toBe(5); // Quantity should be 2 + 3 = 5
-  });
-});
 
 describe("GET /api/cart - View Cart", () => {
   let sweet1;

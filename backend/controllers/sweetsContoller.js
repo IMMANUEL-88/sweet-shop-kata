@@ -31,32 +31,26 @@ export const getSweets = asyncHandler(async (req, res) => {
 export const searchSweets = asyncHandler(async (req, res) => {
   const { name, category, minPrice, maxPrice } = req.query;
 
-  // Build the query object dynamically
   const query = {};
 
   if (name) {
-    // $regex provides partial matching, $options: 'i' makes it case-insensitive
-    query.name = { $regex: name, $options: 'i' };
+    query.name = { $regex: name, $options: "i" }; // case-insensitive
   }
 
   if (category) {
-    query.category = category;
+    query.category = { $regex: category, $options: "i" }; // <-- FIX here
   }
 
-  // Handle price range
   if (minPrice || maxPrice) {
     query.price = {};
-    if (minPrice) {
-      query.price.$gte = Number(minPrice); // $gte = greater than or equal to
-    }
-    if (maxPrice) {
-      query.price.$lte = Number(maxPrice); // $lte = less than or equal to
-    }
+    if (minPrice) query.price.$gte = Number(minPrice);
+    if (maxPrice) query.price.$lte = Number(maxPrice);
   }
 
   const sweets = await Sweet.find(query);
   res.json(sweets);
 });
+
 
 // @desc    Update a sweet
 // @route   PUT /api/sweets/:id

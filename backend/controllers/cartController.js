@@ -11,35 +11,36 @@ export const addToCart = asyncHandler(async (req, res) => {
   const { sweetId, quantity } = req.body;
   const numQuantity = Number(quantity);
 
-  // 1. Validation (for 400 Bad Request)
-  if (!sweetId || !numQuantity || numQuantity <= 0) {
+  // --- FIX 1: Allow negative quantities (for decrementing) ---
+  if (!sweetId || !numQuantity || numQuantity === 0) {
     res.status(400);
-    throw new Error('A valid sweet ID and positive quantity are required.');
+    throw new Error('A valid sweet ID and non-zero quantity are required.');
   }
 
-  // 2. Check if the sweet exists (for 404 Not Found)
   const sweet = await Sweet.findById(sweetId);
   if (!sweet) {
     res.status(404);
     throw new Error('Sweet not found');
   }
 
-  // 3. Get the user (from 'protect' middleware)
-  const user = await User.findById(req.user._id);
+  const user = req.user; 
+  
   const existingItemIndex = user.cart.findIndex(
     (item) => item.sweet.toString() === sweetId
   );
 
   if (existingItemIndex > -1) {
-    // 4. If item exists, update its quantity
     user.cart[existingItemIndex].quantity += numQuantity;
   } else {
-    // 5. If item is new, add it to the cart
     user.cart.push({ sweet: sweetId, quantity: numQuantity });
   }
 
-  // 6. Save and respond
   await user.save();
+  
+  // --- FIX 2: Populate the cart before sending it back ---
+  // This ensures the frontend gets the full sweet details (name, price, etc.)
+  await user.populate('cart.sweet');
+
   res.status(200).json(user.cart);
 });
 
