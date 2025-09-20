@@ -64,3 +64,32 @@ export const getCart = asyncHandler(async (req, res) => {
   // 2. Respond with the user's populated cart.
   res.status(200).json(user.cart);
 });
+
+/**
+ * @desc    Remove an item from the user's cart.
+ * @route   DELETE /api/cart/:id
+ * @access  Private
+ */
+export const removeFromCart = asyncHandler(async (req, res) => {
+  const sweetIdToRemove = req.params.id;
+  const user = await User.findById(req.user._id);
+
+  // Find the index of the item in the cart
+  const itemIndex = user.cart.findIndex(
+    (item) => item.sweet.toString() === sweetIdToRemove
+  );
+
+  if (itemIndex > -1) {
+    // If the item is found, remove it from the array
+    user.cart.splice(itemIndex, 1);
+    await user.save();
+    
+    // We need to populate the cart again to return the full sweet details
+    const updatedUser = await User.findById(req.user._id).populate('cart.sweet');
+    res.status(200).json(updatedUser.cart);
+  } else {
+    // If the item is not in the cart, send a 404
+    res.status(404);
+    throw new Error('Item not found in cart');
+  }
+});
