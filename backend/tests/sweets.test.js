@@ -677,75 +677,85 @@ describe("DELETE /api/cart/:id - Remove Item from Cart", () => {
   });
 });
 
-describe('POST /api/cart/purchase - Purchase from Cart', () => {
+describe("POST /api/cart/purchase - Purchase from Cart", () => {
   let sweet1, sweet2;
 
   beforeEach(async () => {
     // This hook runs *after* the top-level 'beforeEach' (which creates the user)
     // and *after* the 'Cart API' beforeEach (which creates the sweets).
-    
-    // We just need to find the sweets created in the parent describe block
-    sweet1 = await Sweet.findOne({ name: 'Lollipop' });
-    sweet2 = await Sweet.findOne({ name: 'Gummy Bear' });
+
+    sweet1 = await Sweet.create({
+      name: "Lollipop",
+      category: "Candy",
+      price: 1,
+      quantity: 100,
+    });
+
+    sweet2 = await Sweet.create({
+      name: "Gummy Bears",
+      category: "Candy",
+      price: 2,
+      quantity: 50,
+    });
 
     // Seed the user's cart with items
     const user = await User.findById(customerId);
     user.cart = [
       { sweet: sweet1._id, quantity: 10 }, // 10 Lollipops (Stock is 100)
-      { sweet: sweet2._id, quantity: 3 }   // 3 Gummy Bears (Stock is 50)
+      { sweet: sweet2._id, quantity: 3 }, // 3 Gummy Bears (Stock is 50)
     ];
     await user.save();
   });
 
-  it('should fail with 401 Unauthorized if no token is provided', async () => {
-    const res = await request(app).post('/api/cart/purchase');
+  it("should fail with 401 Unauthorized if no token is provided", async () => {
+    const res = await request(app).post("/api/cart/purchase");
     expect(res.statusCode).toEqual(401);
   });
 
-  it('should fail with 400 Bad Request if the cart is empty', async () => {
+  it("should fail with 400 Bad Request if the cart is empty", async () => {
     // Clear the cart for this specific test
     const user = await User.findById(customerId);
     user.cart = [];
     await user.save();
 
     const res = await request(app)
-      .post('/api/cart/purchase')
-      .set('Authorization', `Bearer ${customerToken}`);
-      
+      .post("/api/cart/purchase")
+      .set("Authorization", `Bearer ${customerToken}`);
+
     expect(res.statusCode).toEqual(400);
-    expect(res.body.message).toBe('Your cart is empty');
+    expect(res.body.message).toBe("Your cart is empty");
   });
 
-  it('should fail with 400 Bad Request if *one* item in the cart is out of stock', async () => {
+  it("should fail with 400 Bad Request if *one* item in the cart is out of stock", async () => {
     // Update Gummy Bear stock to be less than the cart quantity
     // Cart has 3, we set stock to 2
     await Sweet.findByIdAndUpdate(sweet2._id, { quantity: 2 });
 
     const res = await request(app)
-      .post('/api/cart/purchase')
-      .set('Authorization', `Bearer ${customerToken}`);
-      
+      .post("/api/cart/purchase")
+      .set("Authorization", `Bearer ${customerToken}`);
+
     expect(res.statusCode).toEqual(400);
-    expect(res.body.message).toContain('Not enough stock for Gummy Bear');
+    expect(res.body.message).toContain("Not enough stock for Gummy Bear");
 
     // Verify stock was NOT changed for the *other* item
     const sweet1InDb = await Sweet.findById(sweet1._id);
     expect(sweet1InDb.quantity).toBe(100); // Should be unchanged
   });
 
-  it('should successfully purchase items, decrease stock, and clear the cart', async () => {
+  it("should successfully purchase items, decrease stock, and clear the cart", async () => {
     const res = await request(app)
-      .post('/api/cart/purchase')
-      .set('Authorization', `Bearer ${customerToken}`);
+      .post("/api/cart/purchase")
+      .set("Authorization", `Bearer ${customerToken}`);
 
     expect(res.statusCode).toEqual(200);
-    expect(res.body.message).toBe('Purchase successful!');
+    expect(res.body.message).toBe("Purchase successful!");
 
     // Verify stock has decreased
     const sweet1InDb = await Sweet.findById(sweet1._id);
     const sweet2InDb = await Sweet.findById(sweet2._id);
     expect(sweet1InDb.quantity).toBe(90); // 100 - 10
-    expect(sweet2InDb.quantity).toBe(47);  // 50 - 3
+    expect(sweet2InDb.quantity).toBe(47); // 50 - 3
 
     // Verify cart is empty
     const user = await User.findById(customerId);

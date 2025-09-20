@@ -93,3 +93,44 @@ export const removeFromCart = asyncHandler(async (req, res) => {
     throw new Error('Item not found in cart');
   }
 });
+
+/**
+ * @desc    Purchase all items from the user's cart.
+ * @route   POST /api/cart/purchase
+ * @access  Private
+ */
+export const purchaseFromCart = asyncHandler(async (req, res) => {
+  // 1. Get the user and their cart.
+  // We MUST .populate() the cart to get the sweet details (like stock quantity)
+  const user = await User.findById(req.user._id).populate('cart.sweet');
+
+  if (!user.cart || user.cart.length === 0) {
+    res.status(400);
+    throw new Error('Your cart is empty');
+  }
+
+  // 2. VALIDATE PHASE: Check stock for ALL items before making any changes.
+  for (const item of user.cart) {
+    if (item.quantity > item.sweet.quantity) {
+      res.status(400);
+      throw new Error(`Not enough stock for ${item.sweet.name}. Available: ${item.sweet.quantity}, In Cart: ${item.quantity}`);
+    }
+  }
+
+  // 3. UPDATE PHASE: If all items are in stock, update all sweet quantities.
+  // We create an array of all the update operations.
+  const updatePromises = user.cart.map(item => 
+    Sweet.findByIdAndUpdate(item.sweet._id, {
+      $inc: { quantity: -item.quantity } // Atomically decrement the quantity
+    })
+  );
+  
+  // Wait for all updates to complete
+  await Promise.all(updatePromises);
+  
+  // 4. CLEAR CART: If all stock updates are successful, clear the user's cart.
+  user.cart = [];
+  await user.save();
+
+  res.status(200).json({ message: 'Purchase successful!' });
+});
