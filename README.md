@@ -5,7 +5,12 @@ Welcome to Sweetify, a full-stack TDD (Test-Driven Development) kata. This proje
 The entire backend was built using a strict Red-Green-Refactor TDD workflow.
 
 **🔍 Checkout website here:** [SweetShopKata](https://sweet-shop-kata.netlify.app/)
+
 - Hosted frontend with [Netlify](https://www.netlify.com/) and backend with [Render](https://render.com/)
+
+> ⚠️ **Note:** The backend is hosted on a free plan, so the server may go inactive after periods of inactivity.  
+> If the site seems slow to respond at first, please wait a few seconds while the backend restarts.
+
 
 
 
@@ -236,5 +241,6 @@ This project was built in collaboration with an AI assistant (Google's Gemini) a
     * **Git Commits:** I asked the AI to generate descriptive, conventional commit messages for each TDD step.
 
 * **My Reflection:** Using an AI as a pair programmer was incredibly effective. It allowed me to focus on the *architecture* and *logic* while it handled the boilerplate for tests and UI components. The debugging process was the most valuable; instead of being stuck for hours on a cryptic error, I could get an immediate diagnosis and solution, which taught me *why* the bug was happening. It made the entire TDD process faster and more educational.
+
 
 
